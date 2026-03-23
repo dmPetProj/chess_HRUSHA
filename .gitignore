@@ -1,0 +1,10 @@
+*.yml
+**/__pycache__
+lichess_bot_auto_logs/*
+.vscode/*
+venv
+.vs/*
+*.pgn
+*.log
+*.txt
+TEMP/*
