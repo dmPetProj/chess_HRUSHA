@@ -102,7 +102,7 @@ class SmartYunaEngine(ExampleYunaEngine):
 
         """
             подсказки Ханса Ниманна :)
-            NOTE: достать нужный движок под ос
+            NOTE: использовать нужный движок под ос
 
         engine = chess.engine.SimpleEngine.popen_uci("engines/stockfish")
                         для linux систем
