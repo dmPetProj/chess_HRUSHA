@@ -25,7 +25,7 @@
 
 ## Чтобы работал SmartYunaEngine:
 для работы SmartYunaEngine нужен stockfish (шахматный движок).
-его в коментариях в homemade.py есть готовое решение или можно найти свое:
+коментариях в homemade.py есть готовое решение или можно найти свое:
 
   sudo apt-get install stockfish
 
