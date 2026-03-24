@@ -8,9 +8,8 @@ from chess import Move
 from chess.engine import PlayResult
 import random
 from lib.engine_wrapper import MinimalEngine
-from lib.lichess_types import MOVE, HOMEMADE_ARGS_TYPE
+from lib.lichess_types import HOMEMADE_ARGS_TYPE
 import logging
-from openai import OpenAI
 
 
 # Use this logger variable to print messages to the console or log files.
@@ -93,7 +92,7 @@ class ExampleYunaEngine(ExampleEngine):
 
 
 class SmartYunaEngine(ExampleYunaEngine):
-    """С подсказками поэтому умни"""
+    """Этот класс реализует ассистента для нейронки"""
 
     def search(self, board: chess.Board, *args: HOMEMADE_ARGS_TYPE) -> PlayResult:
 
@@ -101,7 +100,19 @@ class SmartYunaEngine(ExampleYunaEngine):
             обращение к нейронке с подсказками
         """
 
-        engine = chess.engine.SimpleEngine.popen_uci("engines/stockfish")       #   объект шахматного асистента
+        """
+            подсказки Ханса Ниманна :)
+            NOTE: достать нужный движок под ос
+
+        engine = chess.engine.SimpleEngine.popen_uci("engines/stockfish")
+                        для linux систем
+
+
+        engine = chess.engine.SimpleEngine.popen_uci("engines/stockfish-windows-x86-64.exe")
+                        для windows
+
+        """
+
         info = engine.analyse(board, chess.engine.Limit(time=1.0), multipv=5)   #   аналитика 5 лучших ходов в позиции
         best_moves = [ move["pv"][0].uci() for move in info ]                   #   очищаем ходы от аналитики преобразуем в массиы
 
