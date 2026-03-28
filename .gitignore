@@ -1,4 +1,5 @@
 **/__pycache__
+config.yml
 lichess_bot_auto_logs/*
 .vscode/*
 venv

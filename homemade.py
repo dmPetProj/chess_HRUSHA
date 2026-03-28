@@ -20,27 +20,32 @@ logger = logging.getLogger(__name__)
 class CommunicateYuna:
     """Класс для взаимодействия с Юной"""
 
-    def is_move_valid(self, uci_move: str, board: chess.Board) -> bool:
-        """
+    """
+        NOTE: __slots__ для оптимизации памяти.
+        Этот класс НЕ может иметь атрибутов экземпляра пока __slots__ = ()
+        Если нужны поля — стереть __slots__ = ()
+    """
+    __slots__ = ()
 
-            Метод проверяет ход на возможность и на формат
+
+
+    def __is_move_valid(self, uci_move: str, board: chess.Board) -> bool:
+        """Метод проверяет ход на возможность и формат"""
+
+        """
             NOTE:
                  uci_move("e2-e4") выбивает ошибку
                  uci_move("e2e4") its okay
-
         """
+
         try:
             return Move.from_uci(uci_move) in board.legal_moves
         except ValueError as e:
             return False
 
 
-    def make_promt(self, board: chess.Board, hint_moves: list[str]) -> str:
-
-        """
-            Готовый промт для игры
-        """
-
+    def __make_promt(self, board: chess.Board, hint_moves: list[str]) -> str:
+        """готовый промт для игры"""
 
         return f"""
             Ты — шахматный гроссмейстер. Анализируй позицию шаг за шагом.
@@ -55,68 +60,67 @@ class CommunicateYuna:
             6. В конце выведи ход котрый считаешь самым сильным и только один в формате UCI (например, g1f3)
 
             Легальные ходы: { ', '.join(move.uci() for move in board.legal_moves) }
-            {f'Несколько хороших ходов: {", ".join(hint_moves)}' if hint_moves else ''}
+            {'' if not hint_moves else f'Несколько хороших ходов: {", ".join(hint_moves)}'}
             """
 
 
 
     def ask_Yuna(self, board: chess.Board, hint_moves: list[str]) -> Move:
-        """
-            Сюда надо законнектить Юну
-        """
+        """cюда надо законнектить Юну"""
 
         """
-            промт уже собран в методе make_promt()
-            выходные данные это объект класса Move который можно создать из строки
+            TODO:
+                1) обращение к Юне
+                2) получение хода который хочет сделать Юна в формате строки "e2e4"
+                3) валидация через __is_move_valid()
+                4) возврат ответа в формате объекта класса Move
+                    его можно создать так:
 
                         Move.from_uci("e2e4")
 
-            NOTE: сначала нужно проверить ход на правильность is_move_valid()
+            NOTE: проверка __is_move_valid() производится сразу после получения строки
             выбрасывается ошибка если ход записан неправильно
-            например Move.from_uci("e2-e4") -> ошибка
-                    Move.from_uci("e2e4") -> объект класса Move создан
+            например
+                        Move.from_uci("e2-e4") -> ошибка
+
+                        Move.from_uci("e2e4") -> все хорошо
         """
 
-        return Move
+        pass
 
 
 
 class ExampleEngine(MinimalEngine):
     """An example engine that all homemade engines inherit."""
-    # Bot names and ideas from tom7's excellent eloWorld video
+
+
 
 class ExampleYunaEngine(ExampleEngine):
     """An example engine that all engines for Yuna inherit:)"""
 
-    yuna_communicator = CommunicateYuna()
+    _yuna_communicator = CommunicateYuna()
 
 
 class SmartYunaEngine(ExampleYunaEngine):
     """Этот класс реализует ассистента для нейронки"""
 
+    __ENGINE_PATH = ...     # TODO: указать путь до файла с движком ассистентом
+                            # для Linux     "engines/stockfish"
+                            # для Windows   "engines/stockfish-windows-x86-64.exe"
+                            # или свой
+
+
+    __engine = chess.engine.SimpleEngine.popen_uci(__ENGINE_PATH)   # ассистент
+
+
+
     def search(self, board: chess.Board, *args: HOMEMADE_ARGS_TYPE) -> PlayResult:
+        """обращение к нейронке с подсказками"""
 
-        """
-            обращение к нейронке с подсказками
-        """
+        info = self.__engine.analyse(board, chess.engine.Limit(time=1.0), multipv=5)   #   аналитика 5 лучших ходов в позиции
+        best_moves = [ move["pv"][0].uci() for move in info ]                          #   очищаем ходы от аналитики преобразуем в массиы
 
-        """
-            подсказки Ханса Ниманна :)
-            NOTE: использовать нужный движок под ос
-
-        engine = chess.engine.SimpleEngine.popen_uci("engines/stockfish")
-                        для linux систем
-
-
-        engine = chess.engine.SimpleEngine.popen_uci("engines/stockfish-windows-x86-64.exe")
-                        для windows
-
-        """
-
-        info = engine.analyse(board, chess.engine.Limit(time=1.0), multipv=5)   #   аналитика 5 лучших ходов в позиции
-        best_moves = [ move["pv"][0].uci() for move in info ]                   #   очищаем ходы от аналитики преобразуем в массиы
-
-        move = self.yuna_communicator.ask_Yuna(board=board, hint_moves=best_moves)   #   обращение к Юне
+        move = self._yuna_communicator.ask_Yuna(board=board, hint_moves=best_moves)     #   обращение к Юне
 
         return PlayResult(move, None)
 
@@ -127,10 +131,7 @@ class YunaEngine(ExampleYunaEngine):
 
 
     def search(self, board: chess.Board, *args: HOMEMADE_ARGS_TYPE) -> PlayResult:
+        """простое обращение к нейронке"""
 
-        """
-            простое обращение к нейронке
-        """
-
-        move = self.yuna_communicator.ask_Yuna(board, [])
+        move = self._yuna_communicator.ask_Yuna(board, None)
         return PlayResult(move, None)

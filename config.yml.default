@@ -29,8 +29,6 @@ engine:                            # Engine settings.
                                    # NOTE: If working_dir is set, the engine will look for files and directories relative to this directory, not where lichess-bot was launched. Absolute paths are unaffected.
   protocol: "homemade"                  # "uci", "xboard" or "homemade"
 
-                # сюда homemade
-
                     # ниже я ничего не трогал
                     # потому что оно и так работает
                     # интерес вызывает только greeting тк бот пишет в чат
