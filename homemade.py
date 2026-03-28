@@ -78,12 +78,17 @@ class CommunicateYuna:
 
                         Move.from_uci("e2e4")
 
-            NOTE: проверка __is_move_valid() производится сразу после получения строки
+            NOTE: ход может быть как 4 символа так и 5
+                "e2e4"
+                "e7e8q"
+            проверка __is_move_valid() производится сразу после получения строки
             выбрасывается ошибка если ход записан неправильно
             например
+                        Move.from_uci(" e2e4") -> ошибка
+
                         Move.from_uci("e2-e4") -> ошибка
 
-                        Move.from_uci("e2e4") -> все хорошо
+                        Move.from_uci("e2e4") -> valid
         """
 
         pass
