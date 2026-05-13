@@ -16,12 +16,14 @@
 1. Создать [Lichess профиль](https://lichess.org/signup) в настройках создать API ключ
 2. Вставить API ключ в upgrade_to_bot_account.py и запустить
 3. Создать config.yml из шаблона config.yml.default и запонить поля: token, name (greeting опционально)
-4. Открыть homemade.py -> class CommunicateYuna реализовать метод ask_Yuna()
+4. Открыть homemade.py -> class CommunicateYuna реализовать методы
 5. Можно запускать -> python lichess-bot.py
 
 ## ФИЧИ:
 - SmartYunaEngine - нейросеть + подсказки от stockfish
 - YunaEngine - только нейросеть
+- Может сказать кто с ней играет
+- Может сказать кого выиграла или кому проиграла
 
 ## Чтобы работал SmartYunaEngine:
 для работы SmartYunaEngine нужен stockfish (шахматный движок).

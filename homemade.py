@@ -27,9 +27,7 @@ class CommunicateYuna:
     """
     __slots__ = ()
 
-
-
-    def __is_move_valid(self, uci_move: str, board: chess.Board) -> bool:
+    def __is_move_valid(self, uci_move: str, board: list[Move]) -> bool:
         """Метод проверяет ход на возможность и формат"""
 
         """
@@ -39,10 +37,9 @@ class CommunicateYuna:
         """
 
         try:
-            return Move.from_uci(uci_move) in board.legal_moves
+            return Move.from_uci(uci_move) in list(board.legal_moves)
         except ValueError as e:
             return False
-
 
     def __make_promt(self, board: chess.Board, hint_moves: list[str]) -> str:
         """готовый промт для игры"""
@@ -63,7 +60,37 @@ class CommunicateYuna:
             {'' if not hint_moves else f'Несколько хороших ходов: {", ".join(hint_moves)}'}
             """
 
+    def call_opponent_info(self, name: str, rating: int, is_bot: bool = False) -> None:
+        """Метод передает информацию о сопернике в начале партии"""
 
+        """
+            TODO:
+                сделать оповещалку Юне чтобы она понимала с кем играет
+
+                f"Твоего соверника зовут {name} его рейтинг {rating}"
+
+        """
+        logger.info(f"Твоего соверника зовут {name} его рейтинг {rating}")
+        pass
+
+    def call_game_ending_result(self, status: str, is_win: bool, winner_name: str) -> None:
+        """Передает информацию о том как завершилась партия"""
+
+        """
+            TODO: сделать оповещалку Юне о том как закочилась партия
+        """
+        if is_win:
+            """Сказать Юне что она выйграла"""
+            logger.info(f"Юна выйграла")
+            pass
+        elif status=="draw" or (status=="outoftime" and winner_name==None):
+            """Скачать Юне что ничья"""
+            logger.info(f"ничья")
+            pass
+        else:
+            """Сказать Юне что она проиграла"""
+            logger.info(f"Юна проиграла игроку с ниом {winner_name}")
+            pass
 
     def ask_Yuna(self, board: chess.Board, hint_moves: list[str]) -> Move:
         """cюда надо законнектить Юну"""
@@ -94,19 +121,36 @@ class CommunicateYuna:
         pass
 
 
-
 class ExampleEngine(MinimalEngine):
     """An example engine that all homemade engines inherit."""
 
 
 
-class ExampleYunaEngine(ExampleEngine):
-    """An example engine that all engines for Yuna inherit:)"""
+class SimpleYunaEngine(ExampleEngine):
+    """Родитель юниных движков"""
 
     _yuna_communicator = CommunicateYuna()
 
+    def get_opponent_info(self, game: "Game") -> None:
+        """Передать метаинфу о сопернике"""
 
-class SmartYunaEngine(ExampleYunaEngine):
+        self._yuna_communicator.call_opponent_info(name=game.opponent.name,
+                                                    rating=game.opponent.rating
+                                                    )
+        return super().get_opponent_info(game)
+
+    def send_game_result(self, game: "Game", board: chess.Board) -> None:
+        """Переопределяет метод завершения игры"""
+        if game.state.get("status") != "aborted":
+            is_yuna_win = game.state.get("winner") == game.my_color
+            self._yuna_communicator.call_game_ending_result(status=game.state.get("status"),
+                                                    is_win=is_yuna_win,
+                                                    winner_name = "me" if is_yuna_win else game.opponent.name,
+                                                        )
+        return super().send_game_result(game, board)
+
+
+class SmartYunaEngine(SimpleYunaEngine):
     """Этот класс реализует ассистента для нейронки"""
 
     __ENGINE_PATH = ...     # TODO: указать путь до файла с движком ассистентом
@@ -131,7 +175,7 @@ class SmartYunaEngine(ExampleYunaEngine):
 
 
 
-class YunaEngine(ExampleYunaEngine):
+class YunaEngine(SimpleYunaEngine):
     """На чистой нейронке"""
 
 
@@ -139,4 +183,12 @@ class YunaEngine(ExampleYunaEngine):
         """простое обращение к нейронке"""
 
         move = self._yuna_communicator.ask_Yuna(board, None)
+        return PlayResult(move, None)
+
+
+class TestEngine(SimpleYunaEngine):
+    """Тестовый движок"""
+
+    def search(self, board: chess.Board, *args: HOMEMADE_ARGS_TYPE) -> PlayResult:
+        move = random.choice(list(board.legal_moves))
         return PlayResult(move, None)
